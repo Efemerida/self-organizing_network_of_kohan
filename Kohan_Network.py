@@ -1,5 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from sklearn import datasets
+import pandas as pd
 
 import utils
 
@@ -21,11 +23,26 @@ class KohanaNetwork:
     alfa = 0.8
     epochs = 1
     p_min = 0.1
-    T = 100
+    T = 178
     L0 = 0.3
 
     excima0 = 0
     potential = []
+
+    def normalization(self, data):
+
+        normalisation = []
+
+        for i in range(len(data)):
+            normalisation.append([])
+            sumPow = 0
+            for j in range(len(data[0])):
+                sumPow += data[i][j]**2
+            sqrt = np.sqrt(sumPow)
+            for j in range(len(data[0])):
+                normalisation[i].append(data[i][j]/sqrt)
+        return normalisation
+
 
     def __init__(self, N, M, input_data=None):
         self.M = M
@@ -87,43 +104,65 @@ class KohanaNetwork:
                 print(f"epoch: {epoch}: {t % 100}")
                 n = self.calc_claster(input_data[t])
 
+
                 for j in range(self.N):
                     for k in range(self.M):
                         if j == n:
                             self.potential[j][k] -= self.p_min
                         else:
                             self.potential[j][k] += (1 / self.N)
-                gaol_node = self.nodes[n//10][n%10]
-
+                gaol_node = self.nodes[n//self.N][n%self.N]
                 for i in range(self.N):
                     for j in range(self.M):
                         d = self.calc_d(gaol_node, self.nodes[i][j])
                         if d < self.excima(t):
-                            r = 0
-                            g = 0
-                            b = 0
+                            # r = 0
+                            # g = 0
+                            # b = 0
+                            sum = 0
                             for z in range(len(input_data[t])):
                                 self.nodes[i][j].weights[z] += self.calc_O(d, t) * self.calc_L(t) * (input_data[t][z] - self.nodes[i][j].weights[z])
-                                if z <= 261:
-                                    r += self.nodes[i][j].weights[z] * z
-                                elif 261 <= z <= 522:
-                                    g += self.nodes[i][j].weights[z] * z
-                                else:
-                                    b += self.nodes[i][j].weights[z] * z
-
-                            self.nodes[i][j].color[0] = (r % 255)/255
-                            self.nodes[i][j].color[1] = (g % 255)/255
-                            self.nodes[i][j].color[2] = (b % 255)/255
+                                sum+= self.nodes[i][j].weights[z]
+                                # if z <= 261:
+                                #     r += self.nodes[i][j].weights[z] * z
+                                # elif 261 <= z <= 522:
+                                #     g += self.nodes[i][j].weights[z] * z
+                                # else:
+                                #     b += self.nodes[i][j].weights[z] * z
+                            average = sum / len(self.nodes[i][j].weights)
+                            self.nodes[i][j].color[0] = average*364%1
+                            self.nodes[i][j].color[1] = average*183%1
+                            self.nodes[i][j].color[2] = average*819%1
 
 
 images, label = utils.load_dataset()
 
 input_d = images[0]
 
-kn = KohanaNetwork(10, 10, input_d)
+wineCSV = pd.read_csv("wine.csv")
+data = np.genfromtxt('wine.csv', delimiter=',')
+dataSet = []
+for i in range(1, len(data)):
+    tmp = []
+    dataSet.append(tmp)
+    for j in range(13):
+        dataSet[i-1].append(data[i][j])
+
+
+
+# wineSet = datasets.load_wine()
+# set = [(wineSet.data[i][None, ...], wineSet.target[i]) for i in range(len(wineSet))]
+#
+# dataset = [set[i][0][0] for i in range(len(set))]
+# print(set)
+
+kn = KohanaNetwork(20, 20, dataSet)
+nDataset = kn.normalization(dataSet)
+
+
 kn.init_weights()
-print(kn.calc_claster(images[0]))
-kn.learn(images)
+# print(kn.calc_claster(images[0]))
+kn.learn(nDataset)
 
 figure, axes = plt.subplots()
 L0 = 0.8
@@ -137,12 +176,12 @@ for i in kn.nodes:
        axes.add_artist(circle)
 
 
-for i in kn.nodes:
-    for node in i:
-        print(f"node {i}:{node}")
-        print(node.weights)
+# for i in kn.nodes:
+#     for node in i:
+#         print(f"node {i}:{node}")
+#         print(node.weights)
 plt.title('Circle')
-plt.xlim(-1, 10)
-plt.ylim(-1, 10)
+plt.xlim(-1, 20)
+plt.ylim(-1, 20)
 
 plt.show()

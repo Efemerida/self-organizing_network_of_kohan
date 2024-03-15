@@ -36,9 +36,9 @@ class KohanaNetwork:
     input_data = []
     alfa = 0.1
     epochs = 3
-    p_min = 0.1
-    T = 30
-    L0 = 0.5
+    p_min = 0.8
+    T = 3
+    L0 = 0.3
     lamda = 0
 
     frames = []
@@ -72,8 +72,14 @@ class KohanaNetwork:
         for i in range(self.N):
             self.nodes.append([])
             for j in range(self.M):
-                self.nodes[i].append(Node(i, j, np.random.random(len(self.input_data[0]))))
-
+                f_n = 0.03
+                t_n = 0.8
+                weights = [0, 0, 0, 0]
+                tt = np.random.randint(3, 80, (1, 4))
+                for p in range(4):
+                    weights[p] = tt[0][p] / 100
+                self.nodes[i].append(Node(i, j, weights))
+                print(self.nodes[i][j].weights)
     def calc_d(self, node1, node2):
         return np.sqrt((node2.x - node1.x) ** 2 +
                        (node2.y - node1.y) ** 2)
@@ -113,27 +119,35 @@ class KohanaNetwork:
             for j in range(self.M):
                 node = self.nodes[i][j]
                 color = [1, 1, 1]
-                sum = 0
-                for k in range(len(node.weights)):
-                    sum += node.weights[k] * 10000000000
-                color[0] = np.abs(sum % 256) / 255 % 1
-                color[1] = np.abs(sum % 256) / 255 % 1
-                color[2] = np.abs(sum % 256) / 255 % 1
+                sum1 = 0
+                sum2 = 0
+                sum3 = 0
+                # for k in range(len(self.input_data[0])):
+                #     if k < 11:
+                #         sum1 += node.weights[k] * 10000000000
+                #     elif 11 <= k < 22:
+                #         sum2 += node.weights[k] * 10000000000
+                #     else:
+                #         sum3 += node.weights[k] * 10000000000
+                # print(node.weights)
+                color[0] *= node.weights[0]
+                color[1] *= node.weights[1]
+                color[2] *= (node.weights[2] + node.weights[3]) % 1
                 node.color = color
 
     def learn(self, input_data):
         for epoch in range(self.epochs):
             for example in range(len(input_data)):
                 print(f"epoch: {epoch}: {example}")
-                for t in range(1, self.T):
+                for t in range(1, len(input_data)):
 
                     n = self.calc_claster(input_data[example])
-                    # for j in range(self.N):
-                    #     for k in range(self.M):
-                    #         if j == n:
-                    #             self.potential[j][k] -= self.p_min
-                    #         else:
-                    #             self.potential[j][k] += (1 / self.N)
+                        # for j in range(self.N):
+                        #     for k in range(self.M):
+                        #         if j == n:
+                        #             self.potential[j][k] -= self.p_min
+                        #         else:
+                        #             self.potential[j][k] += (1 / self.N)
                     gaol_node = self.nodes[n // self.N][n % self.N]
 
                     sigma = self.ecma(t)
@@ -147,7 +161,7 @@ class KohanaNetwork:
                         for j in range(0, len(neighbours[i].weights)):
                             weight = neighbours[i].weights[j]
                             neighbours[i].weights[j] += theta * L * (input_data[example][j] - weight)
-
+                    #print(gaol_node.weights)
 
                     # for i in range(self.N):
                     #     for j in range(self.M):
@@ -175,7 +189,7 @@ class KohanaNetwork:
                 #
                 # plt.show()
 
-        self.update_color()
+            self.update_color()
 
         # if z <= 261:
         #     r += self.nodes[i][j].weights[z] * z
@@ -217,16 +231,17 @@ class KohanaNetwork:
 
 images, label = utils.load_dataset()
 
-input_d = images[0]
+iris_dataset = datasets.load_iris()
 
-data = np.genfromtxt('fruit.csv', delimiter=';')
-dataSet = []
-for i in range(1, len(data)):
-    tmp = []
-    dataSet.append(tmp)
-    for j in range(33):
-        dataSet[i - 1].append(data[i][j])
-print(dataSet)
+input_d = images[0]
+dataSet = iris_dataset["data"]
+# data = np.genfromtxt('fruit.csv', delimiter=';')
+# dataSet = []
+# for i in range(1, len(data)):
+#     tmp = []
+#     dataSet.append(tmp)
+#     for j in range(33):
+#         dataSet[i - 1].append(data[i][j])
 
 # wineSet = datasets.load_wine()
 # set = [(wineSet.data[i][None, ...], wineSet.target[i]) for i in range(len(wineSet))]
@@ -234,6 +249,20 @@ print(dataSet)
 # dataset = [set[i][0][0] for i in range(len(set))]
 # print(set)
 nDataset = normalization(dataSet)
+print(nDataset)
+# color  = [1, 1, 1]
+# for k in range(len(nDataset[0])):
+#     sum += nDataset[0][k] * 10000000000
+# color[0] = np.abs(sum % 256) / 255 % 1
+# color[1] = np.abs(sum % 256) / 255 % 1
+# color[2] = np.abs(sum % 256) / 255 % 1
+# figure, axes = plt.subplots()
+#
+# color = {'r': color[0], 'g': color[1], 'b': color[2]}
+# circle = plt.Circle((5.0, 5.0,), 0.3, fill=True,
+#                             color=(color['r'], color['g'], color['b']))
+# axes.set_aspect(1)
+# axes.add_artist(circle)
 kn = KohanaNetwork(10, 10, nDataset)
 
 kn.init_weights()

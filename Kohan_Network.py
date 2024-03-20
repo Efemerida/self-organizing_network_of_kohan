@@ -36,9 +36,9 @@ class KohanaNetwork:
     input_data = []
     alfa = 0.1
     epochs = 3
-    p_min = 0.8
-    T = 3
-    L0 = 0.3
+    p_min = 0.2
+    T = 10
+    L0 = 0.33
     lamda = 0
 
     frames = []
@@ -80,10 +80,10 @@ class KohanaNetwork:
                     weights[p] = tt[0][p] / 100
                 self.nodes[i].append(Node(i, j, weights))
                 print(self.nodes[i][j].weights)
+
     def calc_d(self, node1, node2):
         return np.sqrt((node2.x - node1.x) ** 2 +
                        (node2.y - node1.y) ** 2)
-
 
     def ecma(self, t):
         return self.excima0 * np.exp(-(t / self.lamda))
@@ -99,6 +99,7 @@ class KohanaNetwork:
         d = np.zeros((self.N, self.M))
         for i in range(self.N):
             for j in range(self.M):
+                if self.potential[i][j] < self.p_min: continue
                 for z in range(len(input_data) - 1):
                     d[i][j] += ((input_data[z] - self.nodes[i][j].weights[z]) ** 2)
 
@@ -119,9 +120,12 @@ class KohanaNetwork:
             for j in range(self.M):
                 node = self.nodes[i][j]
                 color = [1, 1, 1]
-                sum1 = 0
+                sum1 = ""
                 sum2 = 0
                 sum3 = 0
+                for z in range(len(node.weights)):
+                    sum1 += (str(int(node.weights[z] * 100 % 100)))
+                    print(f'sus {int(node.weights[z] * 100 % 100)}')
                 # for k in range(len(self.input_data[0])):
                 #     if k < 11:
                 #         sum1 += node.weights[k] * 10000000000
@@ -130,9 +134,10 @@ class KohanaNetwork:
                 #     else:
                 #         sum3 += node.weights[k] * 10000000000
                 # print(node.weights)
-                color[0] *= node.weights[0]
+                print(sum1)
+                color[0] = int(sum1)
                 color[1] *= node.weights[1]
-                color[2] *= (node.weights[2] + node.weights[3]) % 1
+                color[2] *= ((node.weights[2] + node.weights[3]) / 2) % 1
                 node.color = color
 
     def learn(self, input_data):
@@ -142,12 +147,12 @@ class KohanaNetwork:
                 for t in range(1, len(input_data)):
 
                     n = self.calc_claster(input_data[example])
-                        # for j in range(self.N):
-                        #     for k in range(self.M):
-                        #         if j == n:
-                        #             self.potential[j][k] -= self.p_min
-                        #         else:
-                        #             self.potential[j][k] += (1 / self.N)
+                    for j in range(self.N):
+                        for k in range(self.M):
+                            if j == n:
+                                self.potential[j][k] -= self.p_min
+                            else:
+                                self.potential[j][k] += (1 / self.N)
                     gaol_node = self.nodes[n // self.N][n % self.N]
 
                     sigma = self.ecma(t)
@@ -157,11 +162,11 @@ class KohanaNetwork:
 
                     for i in range(0, len(neighbours)):
                         r = self.calc_d(neighbours[i], gaol_node)
-                        theta = np.exp(-((r**2)/(2*(sigma**2))))
+                        theta = np.exp(-((r ** 2) / (2 * (sigma ** 2))))
                         for j in range(0, len(neighbours[i].weights)):
                             weight = neighbours[i].weights[j]
                             neighbours[i].weights[j] += theta * L * (input_data[example][j] - weight)
-                    #print(gaol_node.weights)
+                    # print(gaol_node.weights)
 
                     # for i in range(self.N):
                     #     for j in range(self.M):
@@ -249,6 +254,7 @@ dataSet = iris_dataset["data"]
 # dataset = [set[i][0][0] for i in range(len(set))]
 # print(set)
 nDataset = normalization(dataSet)
+nDataset = np.random.permutation(nDataset)
 print(nDataset)
 # color  = [1, 1, 1]
 # for k in range(len(nDataset[0])):
@@ -263,24 +269,38 @@ print(nDataset)
 #                             color=(color['r'], color['g'], color['b']))
 # axes.set_aspect(1)
 # axes.add_artist(circle)
-kn = KohanaNetwork(10, 10, nDataset)
-
-kn.init_weights()
-# print(kn.calc_claster(images[0]))
-kn.learn(nDataset)
-
-figure, axes = plt.subplots()
-L0 = 0.33
-for i in kn.nodes:
-    for node in i:
-        kn.update_color()
-        color = {'r': node.color[0], 'g': node.color[1], 'b': node.color[2]}
-        print(color)
-
-        circle = plt.Circle((node.x, node.y,), 0.3, fill=True,
-                            color=(color['r'], color['g'], color['b']))
-        axes.set_aspect(1)
-        axes.add_artist(circle)
+# kn = KohanaNetwork(10, 10, nDataset)
+#
+# kn.init_weights()
+# # print(kn.calc_claster(images[0]))/.
+# kn.learn(nDataset)
+#
+# figure, axes = plt.subplots()
+# L0 = 0.33
+arr = [[0] * 50] * 3
+# kn.update_color()
+#
+# z = 0
+# p = 0
+# arr2 = [0] * len(dataSet)
+# for i in range(len(dataSet)):
+#     sum = 0
+#     for j in range(len(dataSet[i])):
+#         # sum += (str(int(dataSet[i][j] * 1000 % 1000)))
+#         sum += dataSet[i][j]
+#     print(z, p)
+#
+#     arr[z][p] = sum #int(sum)/4616264
+#     print(arr[z][p])
+#     p += 1
+#     if p % 50 == 0:
+#         z += 1
+#         p = 0
+#     if z == 3:
+#         break
+# print(dataSet)
+# plt.pcolormesh(arr, cmap='cividis')
+# plt.show()
 
 # for i in kn.nodes:
 #     for node in i:

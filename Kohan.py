@@ -2,17 +2,22 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn import datasets
 
+import utils
+
+
 class Node:
     def __init__(self, x, y, weights):
         self.x = x
         self.y = y
         self.weights = weights
         self.color = 1
+
+
 class Kohan_Network:
     nodes = []
 
     alfa = 0.1
-    epochs = 3
+    epochs = 4
     p_min = 0.2
     T = 10
     L0 = 0.33
@@ -27,7 +32,7 @@ class Kohan_Network:
         self.M = M
         self.N = N
         self.input_data = input_data
-        self.potential = [1 / (N*M) for _ in range(N * M)]
+        self.potential = [1 / (N * M) for _ in range(N * M)]
         self.excima0 = max(N, M) / 2
         self.lamda = self.T / np.log(self.excima0)
 
@@ -40,13 +45,13 @@ class Kohan_Network:
             self.nodes.append(Node(i, 0, weights))
 
     def calc_cluster(self, input_data):
-        d = np.zeros((self.N* self.M))
+        d = np.zeros((self.N * self.M))
         for i in range(self.N * self.M):
-                if self.potential[i] < self.p_min: continue
-                sum = 0
-                for z in range(len(input_data)):
-                    sum += ((input_data[z] - self.nodes[i].weights[z]) ** 2)
-                d[i] = np.sqrt(sum)
+            if self.potential[i] < self.p_min: continue
+            sum = 0
+            for z in range(len(input_data)):
+                sum += ((input_data[z] - self.nodes[i].weights[z]) ** 2)
+            d[i] = np.sqrt(sum)
 
         return np.argmin(d)
 
@@ -55,14 +60,13 @@ class Kohan_Network:
         for i in range(self.N * self.M):
             sum = 0
             for z in range(len(node.weights)):
-                sum+= (node.weights[z] - self.nodes[i].weights[z]) ** 2
+                sum += (node.weights[z] - self.nodes[i].weights[z]) ** 2
             d = np.sqrt(sum)
             ecma = self.excima0 * np.exp(-(t / self.lamda))
             if d < ecma:
                 neighbours.append(self.nodes[i])
 
         return neighbours
-
 
     def learn(self, input_data):
         for epoch in range(self.epochs):
@@ -85,7 +89,7 @@ class Kohan_Network:
                     for i in range(len(neighbours)):
 
                         d = np.sqrt((neighbours[i].x - gaol_node.x) ** 2 +
-                                (neighbours[i].y - gaol_node.y) ** 2)
+                                    (neighbours[i].y - gaol_node.y) ** 2)
 
                         theta = np.exp(-((d * d) / (2 * (sigma * sigma))))
 
@@ -110,6 +114,8 @@ class Kohan_Network:
             for z in range(len(node.weights)):
                 sum1 += node.weights[z]
             node.color = sum1
+
+
 def normalization(data):
     normalisation = []
     for i in range(len(data)):
@@ -122,7 +128,23 @@ def normalization(data):
             normalisation[i].append(data[i][j] / sqrt)
     return normalisation
 
+
 iris_dataset = datasets.load_iris()["data"]
+fruit_dataset = utils.get_fruit_dataset()
+
+wine_dataset_file = np.genfromtxt('wine.csv', delimiter=',')
+wine_dataset = utils.get_wine_dataset()
+
+print(len(iris_dataset))
+arr = []
+p = 0
+for i in range(50):
+    arr.append([])
+    for j in range(3):
+        arr[i].append(sum(iris_dataset[p]))
+        p += 1
+plt.imshow(arr, cmap='viridis')
+plt.show()
 
 normalization_dataset = normalization(iris_dataset)
 
@@ -130,9 +152,6 @@ kn = Kohan_Network(10, 10, normalization_dataset)
 kn.init_weights()
 kn.update_color()
 kn.learn(normalization_dataset)
-
-
-
 
 
 # nDataset = np.random.permutation(nDataset)
@@ -147,19 +166,32 @@ for i in range(10):
         p += 1
 
 print(arr)
+plt.close()
 plt.imshow(arr, cmap='viridis')
 plt.show()
 
-
-
-
-
-
-
-
-
-
-
+# normalization_dataset = normalization(iris_dataset)
+#
+# kn = Kohan_Network(10, 10, normalization_dataset)
+# kn.init_weights()
+# kn.update_color()
+# kn.learn(normalization_dataset)
+#
+#
+# # nDataset = np.random.permutation(nDataset)
+# arr = [[0] * 10] * 10
+#
+# sum = 0
+# z = 0
+# p = 0
+# for i in range(10):
+#     for j in range(10):
+#         arr[i][j] = kn.nodes[p].color
+#         p += 1
+#
+# print(arr)
+# plt.imshow(arr, cmap='viridis')
+# plt.show()
 
 # import numpy as np
 # import matplotlib.pyplot as plt

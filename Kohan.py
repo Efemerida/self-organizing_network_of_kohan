@@ -17,9 +17,9 @@ class Kohan_Network_2:
     nodes = []
 
     epochs = 10
-    p_min = 0.3
-    T = 10
-    L0 = 0.33
+    p_min = 0.4
+    T = 15
+    L0 = 0.2
     lamda = 0
 
     frames = []
@@ -72,10 +72,10 @@ class Kohan_Network_2:
         return neighbours
 
     def learn(self, input_data):
-        for epoch in range(self.epochs):
-            for example in range(len(input_data)):
-                print(f"epoch: {epoch}: {example}")
-                for t in range(1, len(input_data)):
+        for t in range(self.T):
+            for data in range(1, len(input_data)):
+                print(f"epoch: {t}: {data}")
+                for example in range(len(input_data)):
                     n = self.calc_cluster(input_data[example])
                     for j in range(self.N):
                         for k in range(self.M):
